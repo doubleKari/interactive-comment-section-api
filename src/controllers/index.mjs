@@ -1,0 +1,1 @@
+export {getComments, addComments} from "./comments.controller.mjs"

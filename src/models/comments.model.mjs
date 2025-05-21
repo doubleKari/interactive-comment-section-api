@@ -24,19 +24,20 @@ const CommentSchema = new mongoose.Schema({
     content: {type: String, required: true},
     createdAt: {type:Date, default:Date.now},
     score: {type: Number,  default: 0},
-    user: {type: [ReplySchema], default:[]}
+    user: {type: UserSchema, required: true},
+    replies: {type: [ReplySchema], default:[]}
 
 })
 
 //main Document Schema
 const CommentsDocumentSchema = new mongoose.Schema({
     currentUser: {type: CurrentUserSchema, required:true},
-    comment: {type: [CommentSchema], default: []}
+    comments: {type: [CommentSchema], default: []}
 })
 
 
-export const CommmentsModel = new mongoose.model('Comments', CommentsDocumentSchema)
-
+export const CommentsDocumentModel = new mongoose.model('Comments', CommentsDocumentSchema)
+export const CommentModel = new mongoose.model('Comment', CommentSchema);
 
 
 
