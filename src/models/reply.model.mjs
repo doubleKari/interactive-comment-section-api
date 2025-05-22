@@ -6,7 +6,7 @@ const replySchema = new mongoose.Schema({
     createdAt: {type: Date, default: Date.now},
     score: {type: Number, default: 0},
     replyingTo: {type: mongoose.Schema.Types.ObjectId, ref:'User'},
-    user: {
+    userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true

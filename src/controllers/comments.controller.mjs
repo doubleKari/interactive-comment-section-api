@@ -2,7 +2,10 @@ import {Comment, User} from "../models/index.mjs"
 
 const getComments = async (req, res) => {
     try {
-      const commentsData = await Comment.find();
+      const commentsData = await Comment.find()
+      .populate('userId')
+      .populate('replies.userId');
+      
       if (!commentsData) {
         return res.status(404).json({ message: "No comments found" });
       }
@@ -37,8 +40,9 @@ const addComment = async (req, res) => {
 
       const createdComment = await newCommentData.save();
 
-      const populatedComment = await Comment.findById(createdComment._id).populate('userId')
-      
+      const populatedComment = await Comment.findById(createdComment._id)
+      .populate('userId')     
+      .populate('replies.userId')
       res.status(201).json(populatedComment);
       
   }catch(error){
