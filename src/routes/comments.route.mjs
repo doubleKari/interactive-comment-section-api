@@ -1,16 +1,12 @@
-import express from "express";  
-import { getComments, addComments } from "../controllers/comments.controller.mjs";
+import express from "express"
+import {commentsController} from "../controllers/index.mjs"
 
 
 const router = express.Router();
 
-router.get("/", (req, res)=> {
-    res.json({"message": "Hello World!"})
-});
-router.post("/comments/", addComments);
-
-
-
+router.use(express.json());
+router.post("/comments/", commentsController.addComment);
+router.get("/comments/", commentsController.getComments);
 
 
 export default router;
