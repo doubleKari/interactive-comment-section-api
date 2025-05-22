@@ -1,5 +1,7 @@
 import {Comment, User} from "../models/index.mjs"
 
+
+//fetch all comments
 const getComments = async (req, res) => {
     try {
       const commentsData = await Comment.find()
@@ -18,7 +20,7 @@ const getComments = async (req, res) => {
 
 
 
-
+//create a comment
 const addComment = async (req, res) => {
     const { content, userId} = req.body;
 
@@ -62,9 +64,35 @@ const addComment = async (req, res) => {
 }
 
 
+//fetch a comment
+
+const getComment = async (req, res)=> {
+  const commentId = req.params.id;
+
+  if (!commentId){
+    return res.status(400).json({message: `Comment with id ${commentId} cannot be found.`});
+  }
+  
+  try {
+    const response = await Comment.findById(commentId)
+    .populate('userId')
+    .populate('replies.userId');
+
+
+    res.status(200).json(response);
+  }catch(error){
+    res.status(500).json({message: error.message})
+  }
+  
+
+
+}
+
+
 const commentsController = {
     getComments,
-    addComment
+    addComment, 
+    getComment
 }
 
 export default commentsController;

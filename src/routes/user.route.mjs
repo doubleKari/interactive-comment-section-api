@@ -6,8 +6,8 @@ import {userController} from "../controllers/index.mjs"
 const router = express.Router();
 
 router.use(express.json());
-router.post("/users/", userController.addUser);
-router.get("/users/", userController.getUsers);
+router.post("/", userController.addUser);
+router.get("/", userController.getUsers);
 
 
 export default router;

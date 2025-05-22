@@ -11,8 +11,8 @@ const app = express();
 
 
 app.use(bodyParser.json());
-app.use("/api/", userRouter);
-app.use("/api/", commentsRouter);
+app.use("/api/users/", userRouter);
+app.use("/api/comments/", commentsRouter);
 
 
 export default app;
