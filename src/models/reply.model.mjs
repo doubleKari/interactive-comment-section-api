@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
 
-const replySchema = new mongoose.Schema({
+export const replySchema = new mongoose.Schema({
     content: {type: String, required: true},
     createdAt: {type: Date, default: Date.now},
     score: {type: Number, default: 0},
-    replyingTo: {type: mongoose.Schema.Types.ObjectId, ref:'User'},
-    userId: {
+    replyingTo: {type: String, required: true},
+    user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
@@ -25,12 +25,16 @@ replySchema.virtual('id').get(function(){
 
 
 replySchema.set('toJSON', {
-    virtuals: true,
+    virtuals: true, 
     transform: (doc, ret)=>{
         delete ret._id;
-        delete ret.__V;
+        delete ret.__v;
         return ret;
     }
 })
 
+
 export default replySchema;
+
+
+

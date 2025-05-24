@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
-import replySchema from "./reply.model.mjs";
+import {replySchema} from "./reply.model.mjs";
 
 const commentSchema = new mongoose.Schema({
     content: {type: String, required:true},
     createdAt: {type: Date, default: Date.now},
     score: {type: Number, default: 0},
-    userId: {
+    user: {
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User',
         required: true

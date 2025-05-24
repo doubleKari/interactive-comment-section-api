@@ -1,3 +1,4 @@
+import mongoose, { mongo } from "mongoose";
 import {Comment, User} from "../models/index.mjs"
 
 
@@ -5,8 +6,8 @@ import {Comment, User} from "../models/index.mjs"
 const getComments = async (req, res) => {
     try {
       const commentsData = await Comment.find()
-      .populate('userId')
-      .populate('replies.userId');
+      .populate('user')
+      .populate('replies.user');
       
       if (!commentsData) {
         return res.status(404).json({ message: "No comments found" });
@@ -19,32 +20,57 @@ const getComments = async (req, res) => {
 
 
 
+//fetch a comment
+
+const getComment = async (req, res)=> {
+  const commentId = req.params.id;
+
+  if (!commentId){
+    return res.status(400).json({message: `Comment with id ${commentId} cannot be found.`});
+  }
+  
+  try {
+    const response = await Comment.findById(commentId)
+    .populate('user')
+    .populate('replies.user');
+
+
+    res.status(200).json(response);
+  }catch(error){
+    res.status(500).json({message: error.message})
+  }
+  
+
+
+}
+
+
 
 //create a comment
 const addComment = async (req, res) => {
-    const { content, userId} = req.body;
+    const { content, user} = req.body;
 
-    if (!content || !userId){
-      return res.status(400).json({message: "Content and userId are required to create a comment."})
+    if (!content || !user){
+      return res.status(400).json({message: "Content and user are required to create a comment."})
     }
 
 
     try {
-      const existingUser = await User.findById(userId);
+      const existingUser = await User.findById(user);
       if (!existingUser){
         return res.status(400).json({message: "User not found  with the provided user id."})
       }
       
       const newCommentData =  new Comment({
         content: content,
-        userId: userId 
+        user: user
       });
 
       const createdComment = await newCommentData.save();
 
       const populatedComment = await Comment.findById(createdComment._id)
-      .populate('userId')     
-      .populate('replies.userId')
+      .populate('user')     
+      .populate('replies.user')
       res.status(201).json(populatedComment);
       
   }catch(error){
@@ -61,38 +87,95 @@ const addComment = async (req, res) => {
     res.status(500).json({ message: error.message });
 
   }
-}
+};
 
 
-//fetch a comment
 
-const getComment = async (req, res)=> {
+//delete a comment 
+const deleteComment = async(req, res) => {
+  /*
+    1. Find comment id
+    2. Delete
+  */
   const commentId = req.params.id;
 
-  if (!commentId){
-    return res.status(400).json({message: `Comment with id ${commentId} cannot be found.`});
+  if (!mongoose.Types.ObjectId.isValid(commentId)){
+    return res.status(400).json({ message: `Invalid comment ID format: ${commentId}` });
+  }
+
+
+
+  try{
+      const deletedComment = await Comment.findByIdAndDelete(commentId);
+
+      if (!deletedComment) {
+        return res.status(404).json({ message: `Comment with ID ${commentId} not found.` });
+      }
+
+      res.status(204).send();
+      
+  }catch(error){
+      console.error('Error deleting comment:', error);
+      res.status(500).json({ message: 'Internal server error while deleting comment.', error: error.message });
+  }
+};
+
+
+
+
+
+
+
+//update a comment
+
+const updateComment = async (req, res)=>{
+  const commentId = req.params.id;
+  const updates = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(commentId)){
+    return res.status(400).json({ message: `Invalid comment ID format: ${commentId}` });
   }
   
   try {
-    const response = await Comment.findById(commentId)
-    .populate('userId')
-    .populate('replies.userId');
+    const updatedComment = await Comment.findByIdAndUpdate(
+      commentId,
+      updates,
+      {
+        new: true,
+        runValidators: true,
 
+      }
+    )
+    .populate('user')
+    .populate('replies.user')
 
-    res.status(200).json(response);
+    if (!updateComment){
+      return res.status(404).json({ message: `Comment with ID ${commentId} not found.` });
+    }
+
+    res.status(200).json(updatedComment);
   }catch(error){
-    res.status(500).json({message: error.message})
+    console.error('Error updating comment:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: 'Validation error during update.', errors: error.errors });
+    }
+    res.status(500).json({ message: 'Internal server error while updating comment.', error: error.message });
+
   }
-  
-
-
 }
+
 
 
 const commentsController = {
     getComments,
-    addComment, 
-    getComment
+    getComment,
+    addComment,
+    deleteComment,
+    updateComment,
+
 }
 
 export default commentsController;
+
+
+
