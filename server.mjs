@@ -11,6 +11,7 @@ const startServer = async ()=> {
         await connectDB();
         app.listen(PORT, ()=> {
             console.log(`App is listening on port ${PORT}`);
+            console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
             
         })
     } catch (error) {

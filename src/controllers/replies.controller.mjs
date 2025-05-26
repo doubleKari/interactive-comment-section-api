@@ -84,6 +84,15 @@ const addReply = async (req, res) =>{
 
 
 
+//TODO: Update a reply
+
+
+
+
+//TODO: Delete a reply
+
+
+
 //get replies to a particular comment
 
 const getRepliesForComment = async (req, res)=>{

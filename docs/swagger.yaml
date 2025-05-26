@@ -1,0 +1,618 @@
+openapi: 3.0.0
+info:
+  title: Interactive Comments API
+  version: 1.0.0
+  description: API for managing comments and replies, with user authentication and score management.
+  
+
+servers:
+  - url: http://localhost:3000/api
+    
+
+tags:
+  - name: Users
+    description: User management operations
+  - name: Comments
+    description: Operations related to main comments
+  - name: Replies
+    description: Operations related to replies within comments
+  - name: Scores
+    description: Operations for managing comment and reply scores
+
+paths:
+  /users: 
+    get:
+      summary: Get all users
+      description: Retrieve a list of all registered users.
+      tags:
+        - Users
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post: 
+      summary: Create a new user
+      description: Registers a new user with a unique username.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+              properties:
+                username:
+                  type: string
+                  example: juliusomo
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad Request (e.g., missing username)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict (e.g., duplicate username)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /comments:
+    get:
+      summary: Get all comments
+      description: Retrieve a list of all comments, populated with user and reply details.
+      tags:
+        - Comments
+      responses:
+        '200':
+          description: A list of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '404':
+          description: No comments found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new comment
+      description: Creates a new main comment.
+      tags:
+        - Comments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewComment'
+      responses:
+        '201':
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Bad Request (e.g., missing content or userId, or invalid userId)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /comments/{commentId}:
+    get:
+      summary: Get a comment by ID
+      description: Retrieve a single comment by its unique ID, populated with user and reply details.
+      tags:
+        - Comments
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: ID of the comment to retrieve
+          schema:
+            type: string
+            format: objectId
+            example: 60d5ec49c6b7d722e0e5a8f4 # Example ObjectId
+      responses:
+        '200':
+          description: Comment found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid comment ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      summary: Update a comment
+      description: Updates one or more fields of an existing comment by its ID.
+      tags:
+        - Comments
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: ID of the comment to update
+          schema:
+            type: string
+            format: objectId
+            example: 60d5ec49c6b7d722e0e5a8f4
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: This is the updated comment content.
+                score:
+                  type: number
+                  example: 15
+              # Potentially add other updatable fields like 'createdAt' if desired
+      responses:
+        '200':
+          description: Comment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Bad Request (e.g., invalid ID format, validation error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a comment
+      description: Deletes a comment by its ID.
+      tags:
+        - Comments
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: ID of the comment to delete
+          schema:
+            type: string
+            format: objectId
+            example: 60d5ec49c6b7d722e0e5a8f4
+      responses:
+        '204':
+          description: Comment deleted successfully (No Content)
+        '400':
+          description: Invalid comment ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /comments/{commentId}/replies:
+    get:
+      summary: Get all replies for a comment
+      description: Retrieve a list of all replies for a specific comment, populated with user details.
+      tags:
+        - Replies
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: ID of the parent comment
+          schema:
+            type: string
+            format: objectId
+            example: 60d5ec49c6b7d722e0e5a8f4
+      responses:
+        '200':
+          description: A list of replies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reply'
+        '400':
+          description: Invalid comment ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Add a reply to a comment
+      description: Adds a new reply to a specific parent comment.
+      tags:
+        - Replies
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: ID of the parent comment
+          schema:
+            type: string
+            format: objectId
+            example: 60d5ec49c6b7d722e0e5a8f4
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewReply'
+      responses:
+        '201':
+          description: Reply added successfully (returns the updated parent comment)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment' # Returns the full updated comment
+        '400':
+          description: Bad Request (e.g., missing data, invalid IDs)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Comment or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /comments/{commentId}/score:
+    patch:
+      summary: Update comment score
+      description: Increments or decrements the score of a main comment.
+      tags:
+        - Scores
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: ID of the comment to update score for
+          schema:
+            type: string
+            format: objectId
+            example: 60d5ec49c6b7d722e0e5a8f4
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreChange'
+      responses:
+        '200':
+          description: Comment score updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Bad Request (e.g., invalid ID, invalid change value)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /comments/{commentId}/replies/{replyId}/score:
+    patch:
+      summary: Update reply score
+      description: Increments or decrements the score of a specific reply within a comment.
+      tags:
+        - Scores
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: ID of the parent comment
+          schema:
+            type: string
+            format: objectId
+            example: 60d5ec49c6b7d722e0e5a8f4
+        - name: replyId
+          in: path
+          required: true
+          description: ID of the reply to update score for
+          schema:
+            type: string
+            format: objectId
+            example: 60d5ec49c6b7d722e0e5a8f5
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreChange'
+      responses:
+        '200':
+          description: Reply score updated successfully (returns the parent comment)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Bad Request (e.g., invalid IDs, invalid change value)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Comment or reply not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the user (virtual from _id)
+          example: 60d5ec49c6b7d722e0e5a8f1
+        username:
+          type: string
+          example: amyrobson
+      #   image: # <--- INCLUDED AS REQUESTED
+      #     type: object
+      #     description: Paths to user avatar images
+      #     properties:
+      #       png:
+      #         type: string
+      #         format: url # Use format: url if it's a URL, or just string if it's a relative path
+      #         example: "./images/avatars/image-amyrobson.png"
+      #       webp:
+      #         type: string
+      #         format: url # Use format: url if it's a URL, or just string if it's a relative path
+      #         example: "./images/avatars/image-amyrobson.webp"
+      # # Add 'image' to required if it's always present
+      # # required:
+      # #   - id
+      # #   - username
+      # #   - image
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the comment (virtual from _id)
+          example: 60d5ec49c6b7d722e0e5a8f2
+        content:
+          type: string
+          example: Impressive! Though it seems the drag feature could be improved.
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-05-26T10:00:00.000Z
+        score:
+          type: number
+          example: 12
+        user:
+          $ref: '#/components/schemas/User' # References the User schema
+        replies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reply' # References the Reply schema
+      required:
+        - id
+        - content
+        - createdAt
+        - score
+        - user
+        - replies
+
+    Reply:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the reply (virtual from _id)
+          example: 60d5ec49c6b7d722e0e5a8f3
+        content:
+          type: string
+          example: If you're still new, I'd recommend focusing on the fundamentals of HTML, CSS, and JS.
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-05-26T10:05:00.000Z
+        score:
+          type: number
+          example: 4
+        replyingTo:
+          type: string
+          description: Username of the user being replied to
+          example: maxblagun
+        user:
+          $ref: '#/components/schemas/User' # References the User schema
+      required:
+        - id
+        - content
+        - createdAt
+        - score
+        - replyingTo
+        - user
+
+    NewComment:
+      type: object
+      required:
+        - content
+        - user
+      properties:
+        content:
+          type: string
+          example: This is a new comment.
+        user:
+          type: string
+          format: objectId
+          description: The ID of the user creating the comment.
+          example: 60d5ec49c6b7d722e0e5a8f1
+
+    NewReply:
+      type: object
+      required:
+        - content
+        - replyingTo
+        - user
+      properties:
+        content:
+          type: string
+          example: This is a new reply.
+        replyingTo:
+          type: string
+          format: objectId
+          description: The ID of the user whose comment/reply is being responded to.
+          example: 60d5ec49c6b7d722e0e5a8f1
+        user:
+          type: string
+          format: objectId
+          description: The ID of the user creating this reply.
+          example: 60d5ec49c6b7d722e0e5a8f1
+
+    ScoreChange:
+      type: object
+      required:
+        - change
+      properties:
+        change:
+          type: number
+          description: Value to change the score by (1 for upvote, -1 for downvote).
+          enum: [1, -1] # Enforces only 1 or -1 are allowed
+          example: 1
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: An error occurred.
+        error:
+          type: string
+          nullable: true
+          example: Detailed error message (optional)

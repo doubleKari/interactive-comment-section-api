@@ -1,5 +1,5 @@
 import express from "express"
-import {commentsController, repliesController} from "../controllers/index.mjs"
+import {commentsController, repliesController, scoreController} from "../controllers/index.mjs"
 
 
 
@@ -11,6 +11,7 @@ router.get("/", commentsController.getComments);
 router.get("/:id", commentsController.getComment);
 router.delete("/:id", commentsController.deleteComment);
 router.patch("/:id/", commentsController.updateComment);
+router.patch("/:id/score", scoreController.updateScore)
 
 router.post("/:id/replies", repliesController.addReply);
 router.get("/:id/replies", repliesController.getRepliesForComment);
